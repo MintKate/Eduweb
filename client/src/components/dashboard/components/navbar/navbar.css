@@ -68,4 +68,18 @@
       }
     }
   }
+  .avatar-initial {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #faece6;
+    color: #FF7235;
+    font-size: 18px;
+    font-weight: bold;
+    border-radius: 50%;
+    text-transform: uppercase;
+  }
+  
 }
