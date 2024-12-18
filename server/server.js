@@ -2,6 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const pool = require("./database");
 const { body, validationResult } = require('express-validator');    
+const session = require("express-session");
 
 const app = express();
 
@@ -50,6 +51,19 @@ app.post("/adduser", [
     }  
 ]);
     
+const session = require("express-session");
+
+// Thiết lập session middleware
+app.use(
+  session({
+    secret: "my_edu_web_key_2151163735", // Thay bằng secret key bảo mật
+    resave: false,
+    saveUninitialized: true,
+    cookie: { secure: false }, // Đặt `true` nếu dùng HTTPS
+  })
+);
+
+
 app.post("/login", async (req, res) => {
     const { email, password } = req.body;
   
@@ -68,12 +82,23 @@ app.post("/login", async (req, res) => {
         return res.status(400).send({ message: "Mật khẩu không đúng!" });
       }
   
+      // Lưu thông tin vào session
+      req.session.user = { username: user.username, email: user.email };
       res.status(200).send({ message: "Đăng nhập thành công!", user });
     } catch (error) {
       console.error("Lỗi đăng nhập:", error);
       res.status(500).send({ message: "Lỗi máy chủ, vui lòng thử lại!" });
     }
   });
+
+  // Endpoint lấy thông tin người dùng từ session
+app.get("/session", (req, res) => {
+  if (req.session.user) {
+    return res.status(200).send(req.session.user);
+  } else {
+    return res.status(401).send({ message: "Người dùng chưa đăng nhập!" });
+  }
+});
 
 
 
