@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -7,19 +9,50 @@ const Register = () => {
     email: "",
     password: "",
   });
+  const navigate = useNavigate();
+  const [errorMessage, setErrorMessage] = useState("");
+
+  // Hàm kiểm tra định dạng email
+  const validateEmail = (email) => {
+    const regex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    return regex.test(email);
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // Kiểm tra các trường dữ liệu
     if (!formData.username || !formData.email || !formData.password) {
-      alert("Vui lòng điền đầy đủ thông tin!");
+      setErrorMessage("Vui lòng điền đầy đủ thông tin!");
       return;
     }
-    console.log("Đăng ký thành công:", formData);
+
+    // Kiểm tra định dạng email
+    if (!validateEmail(formData.email)) {
+      setErrorMessage("Email không hợp lệ! Vui lòng nhập lại.");
+      return;
+    }
+
+    try {
+      const response = await axios.post("http://localhost:4000/adduser", formData);
+      console.log("Đăng ký thành công:", response.data);
+      setErrorMessage("");
+      navigate("/dashboard");  // Chuyển hướng sau khi đăng ký thành công
+    } catch (error) {
+      console.error("Lỗi khi đăng ký:", error.response ? error.response.data : error.message);
+
+      // Hiển thị thông báo lỗi nếu email đã tồn tại
+      if (error.response && error.response.status === 400) {
+        setErrorMessage(error.response.data.message);  // Lỗi từ backend, như "Tài khoản đã tồn tại!"
+      } else {
+        setErrorMessage("Lỗi khi đăng ký! Vui lòng thử lại.");
+      }
+    }
   };
 
   return (
@@ -28,6 +61,12 @@ const Register = () => {
         <h1 className="text-2xl font-semibold text-center text-gray-700 mb-6">
           Đăng Ký
         </h1>
+        {errorMessage && (
+          <div className="text-red-500 text-center mb-4">
+            {errorMessage}
+          </div>
+        )}
+        
         <form className="space-y-4" onSubmit={handleSubmit}>
           <div>
             <input
@@ -73,10 +112,7 @@ const Register = () => {
         </form>
         <div className="mt-4 text-center">
           <span className="text-gray-600">Bạn đã có tài khoản? </span>
-          <Link
-            to="/login"
-            className="text-accent hover:underline"
-          >
+          <Link to="/login" className="text-accent hover:underline">
             Đăng nhập
           </Link>
         </div>

@@ -1,13 +1,13 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
-import { useNavigate } from 'react-router-dom';
-
+import { Link, useNavigate } from "react-router-dom";
+import axios from "axios";
 
 const Login = () => {
   const [formData, setFormData] = useState({
     email: "",
     password: "",
   });
+  const [errorMessage, setErrorMessage] = useState(""); // State để lưu thông báo lỗi
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -15,15 +15,30 @@ const Login = () => {
     setFormData({ ...formData, [name]: value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+
     if (!formData.email || !formData.password) {
-      alert("Vui lòng điền đầy đủ thông tin!");
+      setErrorMessage("Vui lòng điền đầy đủ thông tin!");
       return;
     }
-    console.log("Đăng nhập thành công:", formData);
-    navigate('/dashboard');
+
+    try {
+      const response = await axios.post("http://localhost:4000/login", formData);
+      console.log("Đăng nhập thành công:", response.data);
+      setErrorMessage(""); // Xóa thông báo lỗi nếu đăng nhập thành công
+      navigate("/dashboard"); // Chuyển hướng đến trang dashboard
+    } catch (error) {
+      console.error("Lỗi khi đăng nhập:", error.response ? error.response.data : error.message);
+
+      if (error.response && error.response.status === 400) {
+        setErrorMessage(error.response.data.message); // Hiển thị lỗi từ server
+      } else {
+        setErrorMessage("Lỗi máy chủ, vui lòng thử lại!");
+      }
+    }
   };
+
 
   return (
     <div className="flex justify-center items-center min-h-screen bg-gray-100">
@@ -31,6 +46,11 @@ const Login = () => {
         <h1 className="text-2xl font-semibold text-center text-gray-700 mb-6">
           Đăng Nhập
         </h1>
+        {errorMessage && (
+          <div className="text-red-500 text-center mb-4">
+            {errorMessage}
+          </div>
+        )}
         <form className="space-y-4" onSubmit={handleSubmit}>
           <div>
             <input
